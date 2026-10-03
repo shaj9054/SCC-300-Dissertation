@@ -1,151 +1,84 @@
-Output Diversity in Generative AI for Source Code
-Dissertation Project – Mohammed Shajalal Sarwar
-📌 Overview
+# Output Diversity in Generative AI for Source Code
 
-This project investigates whether Large Language Models (LLMs)—specifically CodeLlama (via Ollama)—can generate context-specific cache replacement algorithms that perform optimally across different access patterns.
+BSc Computer Science dissertation by Mohammed Shajalal Sarwar, Lancaster University.
 
-The study compares two prompting strategies:
+This project investigates whether CodeLlama, accessed through Ollama, can generate cache replacement implementations suited to different access patterns. It compares minimal and detailed prompting for LRU, FIFO and LIFO caches, using cache hit ratio as the performance metric. The wider research considers generated implementations as a possible alternative to Genetic Improvement approaches.
 
-Minimal Prompting – brief functional requirements
+## Research questions
 
-Detailed Prompting – explicit, structured instructions
+- How does prompt detail affect the behaviour of generated cache code?
+- How do generated LRU, FIFO and LIFO implementations perform under cyclic, random and locality-based workloads?
+- Can generated implementations offer useful, workload-specific alternatives to conventional implementations?
 
-The generated cache implementations (LRU, FIFO, LIFO) are evaluated against three controlled access sequences:
+## Methodology
 
-Cyclic
+Minimal prompts give essential functional requirements; detailed prompts add more explicit implementation guidance. Generated cache classes are adapted through wrappers that standardise their interface and count hits and misses.
 
-Random
+The primary metric is:
 
-Locality-based
+```text
+cache hit ratio = hits / (hits + misses)
+```
 
-The primary performance metric is cache hit ratio, enabling clear comparison between algorithm behaviour and prompting strategies.
+Repeated runs explore variation across generated access sequences. The submitted dissertation contains the methodology, results and interpretation; it should be used for reported findings rather than assuming that every script snapshot reproduces the final experiment configuration.
 
-This project also explores whether LLM-generated implementations could serve as an alternative to traditional Genetic Improvement (GI) techniques in software optimisation.
+## Repository structure
 
-🧠 Research Questions
+| Path | Purpose |
+| --- | --- |
+| [Dissertation PDF](Output_Diversity_in_Generative_AI_for_Source_Code.pdf) | Full research report. |
+| `main.py` | Interactive CodeLlama application with prompt history and error logging. |
+| `TYP.py` | Baseline caches, sequence generators and repeated-run evaluation. |
+| `minLRU.py`, `minFIFO.py`, `minLIFO.py` | Minimal-prompt generated implementations. |
+| `detailedLRU.py`, `detailedFIFO.py`, `detailedLIFO.py` | Detailed-prompt generated implementations. |
+| `wrapper.py` | Common wrappers for the generated implementations. |
+| `test.py` | Generated-cache comparison script snapshot. |
+| `charts.py` | Grouped bar chart using stored result arrays. |
+| `conversation_history.txt` | Saved prompting history. |
+| `Dissertation.zip` | Included project archive. |
 
-Can LLMs generate cache implementations that are not only functionally correct but also context-optimised?
+## Running the baseline experiment
 
-How do minimal and detailed prompts influence implementation quality?
+Use Python 3 in a fresh environment. The baseline harness uses the standard library:
 
-Do LLM-generated solutions exhibit behaviour comparable to optimisation methods like GI?
+```bash
+git clone https://github.com/shaj9054/SCC-300-Dissertation.git\ncd SCC-300-Dissertation\npython3 -m venv .venv\nsource .venv/bin/activate\npython TYP.py
+```
 
-How do LRU, FIFO, and LIFO implementations perform under different access patterns?
+On Windows, activate with `.venv\\Scripts\\activate`. Do not rely on the committed `bin/` and `lib/` directories as a portable environment.
 
-🧪 Methodology
-1. Prompting Approaches
+The current baseline entry point uses six items, sequence length 20, ten runs and cache capacity three. It prints mean hit ratios for each cache/workload combination. Random sequences are not seeded in this script, so runs can differ.
 
-Two prompting styles were used:
+## Viewing the stored chart
 
-Minimal
+```bash
+python -m pip install numpy matplotlib\npython charts.py
+```
 
-Only essential functional requirements
+This plots hard-coded arrays; it does not load fresh experimental output or calculate uncertainty.
 
-LLM decides all implementation details
+## Interactive code generation
 
-Produces creative but inconsistent results
+`main.py` requires a running Ollama service with the `codellama` model and compatible LangChain packages. Install the Python dependencies in the fresh environment:
 
-Detailed
+```bash
+python -m pip install langchain langchain-ollama
+```
 
-Explicit steps, data structures, and edge-case handling
+With Ollama installed and running:
 
-More consistent and correct, less diverse
+```bash
+ollama pull codellama\npython main.py
+```
 
-2. Generated Cache Algorithms
+The script uses the legacy `langchain.prompts` import path; newer package releases may need a compatible environment or an import update. There is no pinned dependency lockfile. The application loads saved conversation history and writes it when you exit, so use a local copy if you want to preserve the included prompt log.
 
-Each algorithm implements:
+## Reproduction notes
 
-get(key)
+The checked-in `test.py` imports a `plot_results` function that `charts.py` does not define, and passes the locality generator without its required locality-window argument. It also sets capacity to five, unlike the baseline entry point. These issues must be reconciled before treating that script as a runnable reproduction of the generated-cache comparison.
 
-put(key, value)
+Cache hit ratio does not measure runtime, memory consumption or overall software correctness. Conclusions are workload-dependent; the project does not establish that generated code is universally better than hand-written code or perform a direct, general benchmark against Genetic Improvement.
 
-size()
+## Future work
 
-Using different underlying structures:
-
-Algorithm	Structure Used
-LRU	OrderedDict
-FIFO	deque + dictionary
-LIFO	Python list
-
-Examples sourced from LLM-generated python files, e.g. minLRU, detailedLRU, minFIFO, detailedLIFO, etc.
-
-3. Test Sequence Generation
-
-Defined in TYP.py:
-
-Cyclic sequences
-
-Random sequences
-
-Locality-based sequences
-
-Each evaluated using the provided test harness.
-
-📊 Performance Metrics
-Cache Hit Ratio
-
-The hit ratio is defined as:
-
-hits / (hits + misses)
-
-
-This is computed using the get_hit_ratio() method in the shared BaseCache class.
-
-Repeated Trials
-
-Each configuration is run multiple times, and averaged, to smooth out:
-
-LLM variability
-
-Sequence randomness
-
-🚀 How to Run
-1. Install Dependencies
-pip install matplotlib
-pip install ollama   # if generating new implementations
-
-2. Run Experiments
-python main.py
-
-3. Generate Charts
-python charts.py
-
-
-Charts include:
-
-Hit ratios per sequence type
-
-Prompting strategy comparisons
-
-Algorithm performance comparisons
-
-🔍 Key Findings
-
-From the dissertation results :
-
-Detailed prompts produce more reliable implementations.
-
-Minimal prompts sometimes outperform detailed variants in specific contexts due to emergent behaviour.
-
-LRU performs best under locality-based and cyclic sequences.
-
-LIFO surprisingly performs strongly in locality-heavy sequences.
-
-FIFO is stable but limited by simplistic eviction logic.
-
-LLM-generated code can approach or exceed the performance of hand-coded implementations.
-
-Demonstrated promise as an alternative to Genetic Improvement.
-
-🧩 Future Work
-
-Evaluate runtime and memory efficiency—not just hit ratio.
-
-Extend beyond basic eviction policies (e.g., ARC, LFU).
-
-Combine LLM generation with Genetic Improvement for hybrid optimisation.
-
-Use adaptive prompting where the system refines prompts based on runtime performance.
-
-Test in real systems or simulators with live workloads.
+Evaluate runtime and memory efficiency, add correctness and reproducibility checks, compare more cache policies, and investigate hybrid generation/optimisation or adaptive prompting. A unified experiment entry point with explicit parameters and uncertainty reporting would make reproduction easier.
